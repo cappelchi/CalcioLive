@@ -1,4 +1,6 @@
 from time import time
+import yaml
+import os
 from utils import load_model
 from dashboard.index import app
 from dash.dependencies import Input, Output, State
@@ -18,11 +20,16 @@ from dash.dependencies import Input, Output, State
 def butt_load_models(start_button, names, nums):
     start_time = time()
     model_types = ['', '1x2:1', 'total:1', 'total:2', 'handicap:1', 'handicap:2']
+    model_path_dict = {}
     for nmod in range (1, 6):
         name = names[nmod]
         mnum = nums[nmod]
         model_type = model_types[nmod]
-        _ = load_model(model_type, name, mnum)
+        model_path = load_model(model_type, name, mnum)
+        model_path_dict[model_type] = model_path
+    yaml_path = os.path.join(os.path.dirname(model_path), 'model_path.yml')
+    with open(yaml_path, "w") as yml:
+        yaml.dump(model_path_dict, yml)
     return {
         'info':f'''
         Download models:

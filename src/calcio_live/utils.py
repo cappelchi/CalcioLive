@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import yaml
 import neptune
 import logging
 from os.path import abspath
@@ -95,10 +96,9 @@ def load_model(model_type_order:str, model_name:str, num:str):
     '''
     model_type, order = model_type_order.split(':')
     model_num = str(num)
-
+    models_dir =  os.path.join(INPUT_DIR, 'models')
     PATH_TO_MODEL = os.path.join(
-        INPUT_DIR,
-        'models',
+        models_dir,
         f'booster_{model_type}_{model_name}_{model_num}.model'
                                 )
     neptune_download(model_name, model_num, PATH_TO_MODEL)
@@ -307,3 +307,17 @@ def make_predict():
                 model_dict['handicap']['2'].predict(input_vector) * 21
             ))
     pd.DataFrame.from_dict(output_dict, orient='index').to_csv('./output.csv')
+
+def console_predict():
+    yaml_path = os.path.join(os.path.abspath('./models'), 'model_path.yml')
+    with open(yaml_path, 'r') as yml:
+        model_path_dict = yaml.load(yml, Loader=yaml.SafeLoader)
+    for model_key, model_path in model_path_dict.items():
+        model_name, model_num = model_key.split(':')
+        if model_name in model_dict:
+            model_dict[model_name][model_num] = CatBoost()
+        else:
+            model_dict[model_name] = {}
+            model_dict[model_name][model_num] = CatBoost()
+        model_dict[model_name][model_num].load_model(model_path)
+    make_predict()
