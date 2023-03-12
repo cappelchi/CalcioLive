@@ -122,10 +122,11 @@ def create_predict_vector(file_path:str):
     match_df.iloc[0, :] = match_df.iloc[0, :].fillna(0)
     match_df = match_df.fillna(method = 'ffill')
     P1, PX, P2 = pd.read_csv(
-                        file_path,
-                        sep = ';',
-                        nrows = 0,
-                            )
+                    file_path,
+                    sep = ';',
+                    nrows = 1,
+                    header = None
+                        ).values[0]
     match_df.loc[:,['P1', 'P2']] = 1 / np.array((P1, P2), dtype = np.float32)
     match_df['min_norm'] = match_df['Minute'].astype(np.float32) / 50
     # трансформируем голы
