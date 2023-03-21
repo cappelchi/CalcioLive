@@ -127,7 +127,7 @@ def create_predict_vector(file_path:str):
                     nrows = 1,
                     header = None
                         ).values[0]
-    match_df.loc[:,['P1', 'P2']] = 1 / np.array((P1, P2), dtype = np.float32)
+    match_df.loc[:,['P1', 'P2']] = np.array((P1, P2), dtype = np.float32)
     match_df['min_norm'] = match_df['Minute'].astype(np.float32) / 50
     # трансформируем голы
     match_df[match_df['Score1'].isna()] = 0
@@ -139,7 +139,7 @@ def create_predict_vector(file_path:str):
     match_df['Score_diff'] = match_df['Score1'].astype(np.int16) - match_df['Score2'].astype(np.int16)
     match_df.loc[match_df['Score_diff'] < -4, ['Score_diff']] = -4
     match_df.loc[match_df['Score_diff'] > 4, ['Score_diff']] = 4
-    match_df[[f'Score_cat_{n}' for n in range(1, 10)]] = np.eye(9)[match_df['Score_diff'].values]
+    match_df[[f'Score_cat_{n}' for n in range(1, 10)]] = np.eye(9)[match_df['Score_diff'].values + 4]
     match_df['Score_diff'] = match_df['Score_diff'].astype(np.float32) / np.float32(4.0)
     # трансформируем атаки
     match_df['A1_scaled'] = match_df['A1'].astype(np.float32) / 75

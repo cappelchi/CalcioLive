@@ -1,0 +1,13 @@
+model_1x2:
+  FOOT-LIVEMC:
+    num: 2
+model_handicap:
+  FOOT-LIVEBST1:
+    num: 3
+  FOOT-LIVEBST2:
+    num: 4
+model_total:
+  FOOT-LIVEBST1:
+    num: 3
+  FOOT-LIVEBST2:
+    num: 4
