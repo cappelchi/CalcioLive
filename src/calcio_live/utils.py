@@ -227,19 +227,37 @@ def total_probability(regression_vector1, regression_vector2):
     for goal1 in range(7):
         for goal2 in range(7):
             total_matrix[goal1 + goal2] = total_matrix[goal1 + goal2] + \
-                                          poisson_dict[1][goal2] * poisson_dict[2][goal1]
+                                          poisson_dict[1][goal1] * poisson_dict[2][goal2]
 
     # Считаем вероятности забить не менее определенного количества мячей
     over_matrix = np.flip(np.cumsum(np.flip(total_matrix)))
     # Считаем вероятности забить не более определенного количества
     under_matrix = np.cumsum(total_matrix)
     return dict(
-        under_05=under_matrix[0], over_05=over_matrix[1],
+        under_05=under_matrix[0]  / (under_matrix[0] + over_matrix[1]),
+        over_05=over_matrix[1]  / (under_matrix[0] + over_matrix[1]),
         under_10=under_matrix[0] / (under_matrix[0] + over_matrix[2]),
         over_10=over_matrix[2] / (under_matrix[0] + over_matrix[2]),
-        under_15=under_matrix[1], over_15=over_matrix[2],
+        under_15=under_matrix[1]  / (under_matrix[1] + over_matrix[2]),
+        over_15=over_matrix[2]  / (under_matrix[1] + over_matrix[2]),
         under_20=under_matrix[1] / (under_matrix[1] + over_matrix[3]),
-        over_20=over_matrix[3] / (under_matrix[1] + over_matrix[3])
+        over_20=over_matrix[3] / (under_matrix[1] + over_matrix[3]),
+        under_25=under_matrix[2] / (under_matrix[2] + over_matrix[3]),
+        over_25=over_matrix[3] / (under_matrix[2] + over_matrix[3]),
+        under_30=under_matrix[2] / (under_matrix[2] + over_matrix[4]),
+        over_30=over_matrix[4] / (under_matrix[2] + over_matrix[4]),
+        under_35=under_matrix[3] / (under_matrix[3] + over_matrix[4]),
+        over_35=over_matrix[4] / (under_matrix[3] + over_matrix[4]),
+        under_40=under_matrix[3] / (under_matrix[3] + over_matrix[5]),
+        over_40=over_matrix[5] / (under_matrix[3] + over_matrix[5]),
+        under_45=under_matrix[4] / (under_matrix[4] + over_matrix[5]),
+        over_45=over_matrix[5] / (under_matrix[4] + over_matrix[5]),
+        under_50=under_matrix[4] / (under_matrix[4] + over_matrix[6]),
+        over_50=over_matrix[6] / (under_matrix[4] + over_matrix[6]),
+        under_55=under_matrix[5] / (under_matrix[5] + over_matrix[6]),
+        over_55=over_matrix[6] / (under_matrix[5] + over_matrix[6]),
+        under_60=under_matrix[5] / (under_matrix[5] + over_matrix[7]),
+        over_60=over_matrix[7] / (under_matrix[5] + over_matrix[7])
     )
 
 
@@ -256,7 +274,7 @@ def handicap_probability(regression_vector1, regression_vector2):
     for goal1 in range(7):
         for goal2 in range(7):
             total_matrix[goal1 - goal2 + 6] = total_matrix[goal1 - goal2 + 6] + \
-            poisson_dict[1][goal2] * poisson_dict[2][goal1]
+            poisson_dict[1][goal1] * poisson_dict[2][goal2]
 
     # Считаем вероятности победы дома over = home_win
     hcap_home = np.cumsum(np.flip(total_matrix))
@@ -264,48 +282,52 @@ def handicap_probability(regression_vector1, regression_vector2):
     hcap_away = np.cumsum(total_matrix)
 
     return dict(
+        home_m55_win=hcap_home[0] / (hcap_home[0] + hcap_away[11]),
+        home_m55_lose=hcap_away[11] / (hcap_home[0] + hcap_away[11]),
         home_m50_win=hcap_home[0] / (hcap_home[0] + hcap_away[10]),
-        home_m50_lose=hcap_away[0] / (hcap_home[0] + hcap_away[10]),
-        home_m45_win=hcap_home[1],
-        home_m45_lose=hcap_away[10],
+        home_m50_lose=hcap_away[10] / (hcap_home[0] + hcap_away[10]),
+        home_m45_win=hcap_home[1] / (hcap_home[1] + hcap_away[10]),
+        home_m45_lose=hcap_away[10] / (hcap_home[1] + hcap_away[10]),
         home_m40_win=hcap_home[1] / (hcap_home[1] + hcap_away[9]),
-        home_m40_lose=hcap_away[1] / (hcap_home[1] + hcap_away[9]),
-        home_m35_win=hcap_home[2],
-        home_m35_lose=hcap_away[9],
+        home_m40_lose=hcap_away[9] / (hcap_home[1] + hcap_away[9]),
+        home_m35_win=hcap_home[2] / (hcap_home[2] + hcap_away[9]),
+        home_m35_lose=hcap_away[9] / (hcap_home[2] + hcap_away[9]),
         home_m30_win=hcap_home[2] / (hcap_home[2] + hcap_away[8]),
         home_m30_lose=hcap_away[2] / (hcap_home[2] + hcap_away[8]),
-        home_m25_win=hcap_home[3],
-        home_m25_lose=hcap_away[8],
+        home_m25_win=hcap_home[3] / (hcap_home[3] + hcap_away[8]),
+        home_m25_lose=hcap_away[8] / (hcap_home[3] + hcap_away[8]),
         home_m20_win=hcap_home[3] / (hcap_home[3] + hcap_away[7]),
         home_m20_lose=hcap_away[7] / (hcap_home[3] + hcap_away[7]),
-        home_m15_win=hcap_home[4],
-        home_m15_lose=hcap_away[7],
+        home_m15_win=hcap_home[4] / (hcap_home[4] + hcap_away[7]),
+        home_m15_lose=hcap_away[7] / (hcap_home[4] + hcap_away[7]),
         home_m10_win=hcap_home[4] / (hcap_home[4] + hcap_away[6]),
         home_m10_lose=hcap_away[6] / (hcap_home[4] + hcap_away[6]),
-        home_m05_win=hcap_home[5],
-        home_m05_lose=hcap_away[6],
+        home_m05_win=hcap_home[5] / (hcap_home[5] + hcap_away[6]),
+        home_m05_lose=hcap_away[6] / (hcap_home[5] + hcap_away[6]),
         home_m00_win=hcap_home[5] / (hcap_home[5] + hcap_away[5]),
         home_m00_lose=hcap_away[5] / (hcap_home[5] + hcap_away[5]),
-        home_p05_win=hcap_home[6],
-        home_p05_lose=hcap_away[5],
+        home_p05_win=hcap_home[6] / (hcap_home[6] + hcap_away[5]),
+        home_p05_lose=hcap_away[5] / (hcap_home[6] + hcap_away[5]),
         home_p10_win=hcap_home[6] / (hcap_home[6] + hcap_away[4]),
         home_p10_lose=hcap_away[4] / (hcap_home[6] + hcap_away[4]),
-        home_p15_win=hcap_home[7],
-        home_p15_lose=hcap_away[4],
+        home_p15_win=hcap_home[7] / (hcap_home[7] + hcap_away[4]),
+        home_p15_lose=hcap_away[4] / (hcap_home[7] + hcap_away[4]),
         home_p20_win=hcap_home[7] / (hcap_home[7] + hcap_away[3]),
         home_p20_lose=hcap_away[3] / (hcap_home[7] + hcap_away[3]),
-        home_p25_win=hcap_home[8],
-        home_p25_lose=hcap_away[3],
+        home_p25_win=hcap_home[8] / (hcap_home[8] + hcap_away[3]),
+        home_p25_lose=hcap_away[3] / (hcap_home[8] + hcap_away[3]),
         home_p30_win=hcap_home[8] / (hcap_home[8] + hcap_away[2]),
         home_p30_lose=hcap_away[2] / (hcap_home[8] + hcap_away[2]),
-        home_p35_win=hcap_home[9],
-        home_p35_lose=hcap_away[2],
+        home_p35_win=hcap_home[9] / (hcap_home[9] + hcap_away[2]),
+        home_p35_lose=hcap_away[2] / (hcap_home[9] + hcap_away[2]),
         home_p40_win=hcap_home[9] / (hcap_home[9] + hcap_away[1]),
         home_p40_lose=hcap_away[1] / (hcap_home[9] + hcap_away[1]),
-        home_p45_win=hcap_home[9],
-        home_p45_lose=hcap_away[2],
-        home_p50_win=hcap_home[9] / (hcap_home[9] + hcap_away[1]),
-        home_p50_lose=hcap_away[1] / (hcap_home[9] + hcap_away[1])
+        home_p45_win=hcap_home[10] / (hcap_home[10] + hcap_away[1]),
+        home_p45_lose=hcap_away[1] / (hcap_home[10] + hcap_away[1]),
+        home_p50_win=hcap_home[10] / (hcap_home[10] + hcap_away[0]),
+        home_p50_lose=hcap_away[0] / (hcap_home[10] + hcap_away[0]),
+        home_p55_win=hcap_home[11] / (hcap_home[11] + hcap_away[0]),
+        home_p55_lose=hcap_away[0] / (hcap_home[11] + hcap_away[0])
                     )
 
 def make_predict():
