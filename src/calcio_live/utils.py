@@ -8,9 +8,19 @@ from os.path import abspath
 from glob import glob
 from catboost import CatBoost
 from scipy.stats import poisson
+import warnings
 
 INPUT_DIR = abspath('./')
 model_dict = {}
+
+with warnings.catch_warnings():
+# Setting values in-place is fine, ignore the warning in Pandas >= 1.5.0
+# This can be removed, if Pandas 1.5.0 does not need to be supported any longer.
+# See also: https://stackoverflow.com/q/74057367/859591
+    warnings.filterwarnings(
+        "ignore",
+        category=FutureWarning,
+        )
 
 data_types_dict = {
     'Id': np.int32,
