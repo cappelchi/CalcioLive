@@ -127,7 +127,7 @@ def create_predict_vector(file_path:str):
                     nrows = 1,
                     header = None
                         ).values[0]
-    match_df.loc[:,['P1', 'P2']] = np.array((P1, P2), dtype = np.float32)
+    match_df.loc[:,['P1', 'P2']] = P1.astype(np.float32), P2.astype(np.float32)
     match_df['min_norm'] = match_df['Minute'].astype(np.float32) / 50
     # трансформируем голы
     match_df[match_df['Score1'].isna()] = 0
