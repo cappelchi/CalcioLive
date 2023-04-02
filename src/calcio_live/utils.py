@@ -13,15 +13,6 @@ import warnings
 INPUT_DIR = abspath('./')
 model_dict = {}
 
-with warnings.catch_warnings():
-# Setting values in-place is fine, ignore the warning in Pandas >= 1.5.0
-# This can be removed, if Pandas 1.5.0 does not need to be supported any longer.
-# See also: https://stackoverflow.com/q/74057367/859591
-    warnings.filterwarnings(
-        "ignore",
-        category=FutureWarning,
-        )
-
 data_types_dict = {
     'Id': np.int32,
     'StatTime': np.datetime64,
@@ -138,7 +129,7 @@ def create_predict_vector(file_path:str):
                     header = None,
                     dtype={0: np.float32, 1: np.float32, 2: np.float32}
                             ).values[0]
-    match_df.loc[:,['P1', 'P2']] = P1, P2
+    match_df[['P1', 'P2']] = P1, P2
     match_df['min_norm'] = match_df['Minute'].astype(np.float32) / 50
     # трансформируем голы
     match_df[match_df['Score1'].isna()] = 0
