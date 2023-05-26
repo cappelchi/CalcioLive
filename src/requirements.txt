@@ -4,3 +4,4 @@ numpy
 dash
 dash-bootstrap-components
 catboost
+flask>=2.2.5 # not directly required, pinned by Snyk to avoid a vulnerability
