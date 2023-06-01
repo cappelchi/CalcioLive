@@ -1,11 +1,7 @@
-# from dashboard.layout.callbacks import butt_load_models
-# from dashboard.layout.callbacks import callbacks2
 from dashboard.index import app
 from dashboard.layout.tab_predict import tab_predict
 from dashboard.layout.tab_files import tab_files
 from dashboard.layout.tab_load_models import tab_load_models
-from dashboard.layout.callbacks import butt_load_models
-from dashboard.layout.callbacks import butt_predict
 from dash import html
 import dash_bootstrap_components as dbc
 
