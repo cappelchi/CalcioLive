@@ -60,13 +60,13 @@ def features_list():
 )
 @click.option(
     "--total_over",
-    "-th",
+    "-to",
     default="A1relativ, A2relativ, DA1relativ, DA2relativ",
     help="features not used in total over separated by commas",
 )
 @click.option(
     "--total_under",
-    "-ta",
+    "-tu",
     default="A1relativ, A2relativ, DA1relativ, DA2relativ",
     help="features not used in total under separated by commas",
 )
