@@ -56,31 +56,37 @@ def features_list():
     "--multiclass",
     "-mc",
     default="A1relativ, A2relativ, DA1relativ, DA2relativ",
-    help="multiclass model version",
+    help="features not used in multiclass separated by commas",
 )
 @click.option(
     "--total_over",
     "-th",
     default="A1relativ, A2relativ, DA1relativ, DA2relativ",
-    help="total model version for over goals quantity prediction",
+    help="features not used in total over separated by commas",
 )
 @click.option(
     "--total_under",
     "-ta",
     default="A1relativ, A2relativ, DA1relativ, DA2relativ",
-    help="total model version for under goals quantity prediction",
+    help="features not used in total under separated by commas",
 )
 @click.option(
     "--handicap_home",
     "-hh",
     default="A1relativ, A2relativ, DA1relativ, DA2relativ",
-    help="handicap model version for away team goal quantity prediction",
+    help="features not used in handicap home separated by commas",
 )
 @click.option(
     "--handicap_away",
     "-ha",
     default="A1relativ, A2relativ, DA1relativ, DA2relativ",
-    help="handicap model version for away team goal quantity prediction",
+    help="features not used in handicap away separated by commas",
+)
+@click.option(
+    "--flip",
+    "-fm",
+    default=False,
+    help="flip multiclass prediction for multiclass model n.2 only",
 )
 def prepare_predict(**params):
     """
@@ -106,7 +112,7 @@ def prepare_predict(**params):
                 models_info_dict[model_type]["path_to_models"][fold_name]
             )
 
-    console_folded_predict(models_dict, model_feature_dict)
+    console_folded_predict(models_dict, model_feature_dict, params["flip"])
     return
 
 

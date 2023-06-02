@@ -263,6 +263,8 @@ def load_folded_model(model_type: str, model_name: str, num: str, folds_tuple: t
 
     model_num: str = str(num)
     models_dir = os.path.join(INPUT_DIR, "models")
+    if not os.path.exists(models_dir):
+        os.makedirs(models_dir)
     path_to_model_dict = {}
     for fold in folds_tuple:
         fold_num: str = fold.split("_")[-1]
@@ -621,7 +623,9 @@ def calculate_predict(
     ) / len(model_fold_dict.keys())
 
 
-def console_folded_predict(models_dict: dict, model_feature_dict: dict):
+def console_folded_predict(
+    models_dict: dict, model_feature_dict: dict, flip_multiclass_output: bool
+):
     """
     :return:
     1. Make dict of models for all types and folds via yaml
@@ -634,15 +638,28 @@ def console_folded_predict(models_dict: dict, model_feature_dict: dict):
         file_num = os.path.basename(file_path).split(".")[0]
         output_dict[file_num] = {}
         input_vector = create_predict_vector(file_path, match_cols)
-        (
-            output_dict[file_num]["mc_home"],
-            output_dict[file_num]["mc_draw"],
-            output_dict[file_num]["mc_away"],
-        ) = calculate_predict(
-            models_dict["multiclass"],
-            input_vector[np.array(model_feature_dict["multiclass"])],
-            "Probability",
-        )
+        if flip_multiclass_output:
+            (
+                output_dict[file_num]["mc_home"],
+                output_dict[file_num]["mc_draw"],
+                output_dict[file_num]["mc_away"],
+            ) = np.flip(
+                calculate_predict(
+                    models_dict["multiclass"],
+                    input_vector[np.array(model_feature_dict["multiclass"])],
+                    "Probability",
+                )
+            )
+        else:
+            (
+                output_dict[file_num]["mc_home"],
+                output_dict[file_num]["mc_draw"],
+                output_dict[file_num]["mc_away"],
+            ) = calculate_predict(
+                models_dict["multiclass"],
+                input_vector[np.array(model_feature_dict["multiclass"])],
+                "Probability",
+            )
         output_dict[file_num].update(
             total_probability(
                 calculate_predict(
