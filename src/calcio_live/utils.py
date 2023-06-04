@@ -65,6 +65,7 @@ DATA_TYPES_DICT = {
 }
 
 COLS = [
+    "StatTime",
     "Minute",
     "Active",
     "Score1",
@@ -88,7 +89,10 @@ COLS = [
     "Pen1",
     "Pen2",
     "Cor1",
-    "Cor2"
+    "Cor2",
+    "Period",
+    "Comment",
+    'vuoto'
 ]
 
 USECOLS = [
@@ -280,7 +284,7 @@ def create_predict_vector(file_path: str, match_cols: list):
     match_df = pd.read_csv(
         file_path,
         sep=";",
-        #names=COLS,
+        names=COLS,
         skiprows=1,
         usecols=USECOLS,
         dtype=DATA_TYPES_DICT,
