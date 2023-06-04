@@ -11,9 +11,9 @@ from scipy.stats import poisson
 
 
 INPUT_DIR = abspath("./")
-model_dict = {}
+MODEL_DICT = {}
 
-data_types_dict = {
+DATA_TYPES_DICT = {
     "Id": np.int32,
     "StatTime": np.datetime64,
     "Minute": np.int8,
@@ -64,8 +64,7 @@ data_types_dict = {
     "H2": np.float16,
 }
 
-cols = [
-    "StatTime",
+COLS = [
     "Minute",
     "Active",
     "Score1",
@@ -94,7 +93,7 @@ cols = [
     "Comment",
 ]
 
-usecols = [
+USECOLS = [
     "Minute",
     "Active",
     "Score1",
@@ -246,8 +245,8 @@ def load_model(model_type: str, model_name: str, num: str):
         models_dir, f"booster_{model_type}_{model_name}_{model_num}.model"
     )
     neptune_download(model_name, model_num, PATH_TO_MODEL)
-    model_dict[model_type] = CatBoost()
-    model_dict[model_type].load_model(PATH_TO_MODEL)
+    MODEL_DICT[model_type] = CatBoost()
+    MODEL_DICT[model_type].load_model(PATH_TO_MODEL)
     return PATH_TO_MODEL
 
 
@@ -283,10 +282,10 @@ def create_predict_vector(file_path: str, match_cols: list):
     match_df = pd.read_csv(
         file_path,
         sep=";",
-        names=cols,
+        names=COLS,
         skiprows=1,
-        usecols=usecols,
-        dtype=data_types_dict,
+        usecols=USECOLS,
+        dtype=DATA_TYPES_DICT,
     )
     match_df.iloc[0, :] = match_df.iloc[0, :].fillna(0)
     match_df = match_df.fillna(method="ffill")
@@ -582,18 +581,18 @@ def make_predict():
             output_dict[file_num]["mc_draw"],
             output_dict[file_num]["mc_away"],
         ) = np.flip(
-            model_dict["1x2"]["1"].predict(input_vector, prediction_type="Probability")
+            MODEL_DICT["1x2"]["1"].predict(input_vector, prediction_type="Probability")
         )
         output_dict[file_num].update(
             total_probability(
-                model_dict["total"]["1"].predict(input_vector) * 21,
-                model_dict["total"]["2"].predict(input_vector) * 21,
+                MODEL_DICT["total"]["1"].predict(input_vector) * 21,
+                MODEL_DICT["total"]["2"].predict(input_vector) * 21,
             )
         )
         output_dict[file_num].update(
             handicap_probability(
-                model_dict["handicap"]["1"].predict(input_vector) * 21,
-                model_dict["handicap"]["2"].predict(input_vector) * 21,
+                MODEL_DICT["handicap"]["1"].predict(input_vector) * 21,
+                MODEL_DICT["handicap"]["2"].predict(input_vector) * 21,
             )
         )
     pd.DataFrame.from_dict(output_dict, orient="index").to_csv("./output.csv")
@@ -605,12 +604,12 @@ def console_predict():
         model_path_dict = yaml.load(yml, Loader=yaml.SafeLoader)
     for model_key, model_path in model_path_dict.items():
         model_name, model_num = model_key.split(":")
-        if model_name in model_dict:
-            model_dict[model_name][model_num] = CatBoost()
+        if model_name in MODEL_DICT:
+            MODEL_DICT[model_name][model_num] = CatBoost()
         else:
-            model_dict[model_name] = {}
-            model_dict[model_name][model_num] = CatBoost()
-        model_dict[model_name][model_num].load_model(model_path)
+            MODEL_DICT[model_name] = {}
+            MODEL_DICT[model_name][model_num] = CatBoost()
+        MODEL_DICT[model_name][model_num].load_model(model_path)
     make_predict()
 
 
