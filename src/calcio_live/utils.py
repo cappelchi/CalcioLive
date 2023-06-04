@@ -88,9 +88,7 @@ COLS = [
     "Pen1",
     "Pen2",
     "Cor1",
-    "Cor2",
-    "Period",
-    "Comment",
+    "Cor2"
 ]
 
 USECOLS = [
