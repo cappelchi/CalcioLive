@@ -687,8 +687,8 @@ def console_folded_predict(
                 )
                 * 21,
                 calculate_predict(
-                    models_dict["handicap_home"],
-                    input_vector[np.array(model_feature_dict["handicap_home"])],
+                    models_dict["handicap_away"],
+                    input_vector[np.array(model_feature_dict["handicap_away"])],
                     "RawFormulaVal",
                 )
                 * 21,
