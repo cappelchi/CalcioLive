@@ -243,6 +243,8 @@ def load_model(model_type: str, model_name: str, num: str):
     """
     model_num = str(num)
     models_dir = os.path.join(INPUT_DIR, "models")
+    if not os.path.exists(models_dir):
+        os.makedirs(models_dir)
     PATH_TO_MODEL = os.path.join(
         models_dir, f"booster_{model_type}_{model_name}_{model_num}.model"
     )
@@ -510,7 +512,6 @@ def handicap_probability(regression_vector1, regression_vector2):
                 total_matrix[goal1 - goal2 + 6]
                 + poisson_dict[1][goal1] * poisson_dict[2][goal2]
             )
-
     # Считаем вероятности победы дома over = home_win
     hcap_home = np.cumsum(np.flip(total_matrix))
     # Считаем вероятности победы гостей under = away_win
