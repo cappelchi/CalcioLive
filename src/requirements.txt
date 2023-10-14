@@ -1,6 +1,0 @@
-neptune
-pandas
-numpy
-dash
-dash-bootstrap-components
-catboost

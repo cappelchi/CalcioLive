@@ -15,7 +15,7 @@ model_dict = {}
 
 data_types_dict = {
     'Id': np.int32,
-    'StatTime': np.datetime64,
+    'StatTime': str,
     'Minute': np.int8,
     'Active': np.int8, 'Score1': np.int8, 'Score2': np.int8,
     'A1': np.int16, 'A2': np.int16, 'DA1': np.int16, 'DA2': np.int16, 'Pos1': np.float32, 'Pos2': np.float32,
@@ -56,6 +56,7 @@ match_cols = ['min_norm', 'Score1_norm', 'Score2_norm',
 
 
 def get_credential(frmwork="neptune_team"):
+    print(os.path.join(os.path.abspath('./'), 'model_path.yml'))
     token_path = os.path.realpath("../credential.txt")
     with open(token_path, "r") as container:
         for line in container:
@@ -112,16 +113,27 @@ def load_model(model_type_order:str, model_name:str, num:str):
 
 
 def create_predict_vector(file_path:str):
-    match_df = pd.read_csv(
-                        file_path,
-                        sep = ';',
-                        names = cols,
-                        skiprows = 1,
-                        usecols = usecols,
-                        dtype = data_types_dict
-                            )
+    try:
+        match_df = pd.read_csv(
+                            file_path,
+                            sep = ';',
+                            index_col = False,
+                            names = cols,
+                            skiprows = 1,
+                            usecols = usecols,
+                            dtype = data_types_dict
+                                )
+    except:
+        match_df = pd.read_csv(
+                            file_path,
+                            sep = ';',
+                            index_col = False,
+                            names = cols,
+                            skiprows = 1,
+                            usecols = usecols
+                                )
     match_df.iloc[0, :] = match_df.iloc[0, :].fillna(0)
-    match_df = match_df.fillna(method = 'ffill')
+    match_df = match_df.ffill()
     P1, PX, P2 = pd.read_csv(
                     file_path,
                     sep = ';',
@@ -133,10 +145,10 @@ def create_predict_vector(file_path:str):
     match_df['min_norm'] = match_df['Minute'].astype(np.float32) / 50
     # трансформируем голы
     match_df[match_df['Score1'].isna()] = 0
-    match_df['Score1_norm'] = match_df['Score1'].fillna(method = 'ffill').fillna(0).astype(np.float32) / 4
+    match_df['Score1_norm'] = match_df['Score1'].ffill().fillna(0).astype(np.float32) / 4
     match_df.loc[match_df['Score1'] > 3, ['Score1_norm']] = 1.0
     match_df[match_df['Score2'].isna()] = 0
-    match_df['Score2_norm'] = match_df['Score2'].fillna(method = 'ffill').fillna(0).astype(np.float32) / 4
+    match_df['Score2_norm'] = match_df['Score2'].ffill().fillna(0).astype(np.float32) / 4
     match_df.loc[match_df['Score2'] > 3, ['Score2_norm']] = 1.0
     match_df['Score_diff'] = match_df['Score1'].astype(np.int16) - match_df['Score2'].astype(np.int16)
     match_df.loc[match_df['Score_diff'] < -4, ['Score_diff']] = -4
@@ -174,21 +186,21 @@ def create_predict_vector(file_path:str):
     match_df['DA2relativ'] = (match_df['DA2'].astype(np.float32) - match_df['DA2'].shift(5).astype(np.float32)).fillna(0)
     match_df.loc[match_df['DA2relativ'] > 10, ['DA2relativ']] = np.float32(10.)
     # Владение мячом
-    match_df['Pos1_cleaned'] = match_df['Pos1'].fillna(method = 'ffill').fillna(0).astype(np.float32) /  np.float32(100.0)
+    match_df['Pos1_cleaned'] = match_df['Pos1'].ffill().fillna(0).astype(np.float32) / np.float32(100.0)
     match_df.loc[match_df['Pos1_cleaned'] < 0.2, ['Pos1_cleaned']] = np.float32(0.2)
     match_df.loc[match_df['Pos1_cleaned'] > 0.8, ['Pos1_cleaned']] = np.float32(0.8)
-    match_df['Pos2_cleaned'] = match_df['Pos2'].fillna(method = 'ffill').fillna(0).astype(np.float32) /  np.float32(100.0)
+    match_df['Pos2_cleaned'] = match_df['Pos2'].ffill().fillna(0).astype(np.float32) / np.float32(100.0)
     match_df.loc[match_df['Pos2_cleaned'] < 0.2, ['Pos2_cleaned']] = np.float32(0.2)
     match_df.loc[match_df['Pos2_cleaned'] > 0.8, ['Pos2_cleaned']] = np.float32(0.8)
     # трансформируем удары
-    match_df['Off1_norm'] = match_df['Off1'].fillna(method = 'ffill').fillna(0).astype(np.float32) / np.float32(10.0)
+    match_df['Off1_norm'] = match_df['Off1'].ffill().fillna(0).astype(np.float32) / np.float32(10.0)
     match_df.loc[match_df['Off1_norm'] > 1.0, ['Off1_norm']] = np.float32(1.0)
-    match_df['Off2_norm'] = match_df['Off2'].fillna(method = 'ffill').fillna(0).astype(np.float32) / np.float32(10.0)
+    match_df['Off2_norm'] = match_df['Off2'].ffill().fillna(0).astype(np.float32) / np.float32(10.0)
     match_df.loc[match_df['Off2_norm'] > 1.0, ['Off2_norm']] = np.float32(1.0)
     # трансформируем удары в створ
-    match_df['On1_norm'] = match_df['On1'].fillna(method = 'ffill').fillna(0).astype(np.float32) / np.float32(5.0)
+    match_df['On1_norm'] = match_df['On1'].ffill().fillna(0).astype(np.float32) / np.float32(5.0)
     match_df.loc[match_df['On1_norm'] > 1.0, ['On1_norm']] = np.float32(1.0)
-    match_df['On2_norm'] = match_df['On2'].fillna(method = 'ffill').fillna(0).astype(np.float32) / np.float32(5.0)
+    match_df['On2_norm'] = match_df['On2'].ffill().fillna(0).astype(np.float32) / np.float32(5.0)
     match_df.loc[match_df['On2_norm'] > 1.0, ['On2_norm']] = np.float32(1.0)
     # Желтые карточки
     match_df['YC1_transformed'] = match_df['YC1'].fillna(0).astype(np.float32) / np.float32(2.0)
@@ -213,7 +225,7 @@ def create_predict_vector(file_path:str):
     # Кэфы
     match_df['P1_transformed'] = np.log(match_df['P1'], dtype = np.float32) / 2
     match_df['P2_transformed'] = np.log(match_df['P2'], dtype = np.float32) / 2
-    return match_df[match_cols].values[-1,:]
+    return match_df
 
 
 def total_probability(regression_vector1, regression_vector2):
@@ -342,7 +354,7 @@ def make_predict():
     for file_path in glob(data_dir):
         file_num = os.path.basename(file_path).split('.')[0]
         output_dict[file_num] = {}
-        input_vector = create_predict_vector(file_path)
+        input_vector = create_predict_vector(file_path)[match_cols].values[-1,:]
         output_dict[file_num]['mc_home'], output_dict[file_num]['mc_draw'], output_dict[file_num]['mc_away'] = \
             (np.flip(model_dict['1x2']['1'].predict(input_vector, prediction_type="Probability")))
         output_dict[file_num].update(
@@ -358,6 +370,8 @@ def make_predict():
     pd.DataFrame.from_dict(output_dict, orient='index').to_csv('./output.csv')
 
 def console_predict():
+    #print(os.path.join(os.path.abspath('./models'), 'model_path.yml'))
+    #return {}
     yaml_path = os.path.join(os.path.abspath('./models'), 'model_path.yml')
     with open(yaml_path, 'r') as yml:
         model_path_dict = yaml.load(yml, Loader=yaml.SafeLoader)
@@ -370,3 +384,202 @@ def console_predict():
             model_dict[model_name][model_num] = CatBoost()
         model_dict[model_name][model_num].load_model(model_path)
     make_predict()
+
+
+def predict_by_model_type(preload_models_dict:dict, input_vector:np.array):
+    if 'home' in preload_models_dict:
+        preds_dict = {}
+        for team, preload_models_dict in preload_models_dict.items():
+            preds_dict[team] = sum(
+                preloaded_model.predict(
+                    input_vector
+                        )
+                    for _, preloaded_model in
+                        preload_models_dict.items()
+                            ) / len(preload_models_dict)
+        return preds_dict
+    else:
+        preds = sum(
+            preloaded_model.predict(
+                input_vector,
+                prediction_type="Probability"
+                    )
+                for _, preloaded_model in
+                    preload_models_dict.items()
+                        ) / len(preload_models_dict)
+        return preds
+
+
+def load_model_info_from_yaml() -> dict:
+    yaml_path = os.path.join(os.path.split(INPUT_DIR)[0], 'models_info.yaml')
+    try:
+        with open(yaml_path, 'r') as yml:
+            yaml_dict = yaml.load(yml, Loader=yaml.SafeLoader)
+            return yaml_dict
+    except:
+        raise Exception('No models setup file found')
+
+
+def load_model_to_dict(model_type:str, model_dict:dict) -> dict:
+    model_path = model_dict['path']
+    folds_quantity = model_dict['fold_quantity']
+    if model_type in ['FOOT-LIVETOTAL', 'FOOT-LIVEHCAP']:
+        preds_dict = {'home':{}, 'away':{}}
+        preds_dict['home'] = {kfold_num:CatBoost().load_model(
+                os.path.join(model_path, f'booster_reg1_{kfold_num}.model')
+                                            )
+            for kfold_num in range(folds_quantity)
+                            }
+        preds_dict['away'] = {kfold_num:CatBoost().load_model(
+                os.path.join(model_path, f'booster_reg2_{kfold_num}.model')
+                                            )
+            for kfold_num in range(folds_quantity)
+                            }
+        return preds_dict
+    else:
+        return {kfold_num:CatBoost().load_model(
+                os.path.join(model_path, f'booster_{kfold_num}.model')
+                                                    )
+                for kfold_num in range(folds_quantity)
+                    }
+
+
+def console_predict_v2(model_type_list:list):
+    model_dict = load_model_info_from_yaml()
+    preload_models_dict = {}
+    for model_type in model_dict:
+        if model_type in model_type_list:
+            preload_models_dict[model_type] = load_model_to_dict(model_type, model_dict[model_type])
+    output_dict = {}
+    data_dir = os.path.join(
+                    os.path.split(os.path.split(INPUT_DIR)[0])[0],
+                    'data', '*.csv'
+                            )
+    for file_path in glob(data_dir):
+        file_num = os.path.basename(file_path).split('.')[0]
+        output_dict[file_num] = {}
+        input_vector = create_predict_vector(file_path)
+        for model_type in model_type_list:
+            if model_type == 'FOOT-LIVEMC':
+                (output_dict[file_num]['mc_home'],
+                 output_dict[file_num]['mc_draw'],
+                 output_dict[file_num]['mc_away']) = \
+                    predict_by_model_type(
+                        preload_models_dict[model_type],
+                        input_vector[
+                            yaml.load(model_dict[model_type]['selected_columns'], Loader = yaml.SafeLoader)
+                                    ].values[-1,:]
+                                            )
+            elif model_type == 'FOOT-LIVETOTAL':
+                preds_dict = predict_by_model_type(
+                        preload_models_dict[model_type],
+                        input_vector[
+                            yaml.load(model_dict[model_type]['selected_columns'], Loader = yaml.SafeLoader)
+                        ].values[-1, :]
+                                            )
+                output_dict[file_num].update(
+                    total_probability(
+                        preds_dict['home'],
+                        preds_dict['away']
+                                            ))
+            elif model_type == 'FOOT-LIVEHCAP':
+                output_dict[file_num].update(
+                    predict_by_model_type(
+                        preload_models_dict[model_type],
+                        input_vector[
+                            yaml.load(model_dict[model_type]['selected_columns'], Loader=yaml.SafeLoader)
+                        ].values[-1, :]
+                                            ))
+    pd.DataFrame.from_dict(
+        output_dict, orient='index'
+                            ).to_csv(
+                os.path.abspath('../../output.csv')
+                                    )
+
+
+def add_model_info_to_yaml(model_type:str, model_description_dict:dict) -> bool:
+    yaml_path = os.path.join(os.path.split(INPUT_DIR)[0], 'models_info.yaml')
+    if os.path.exists(yaml_path):
+        with open(yaml_path, 'r') as yml:
+            yaml_dict = yaml.load(yml, Loader=yaml.SafeLoader)
+        if not(isinstance(yaml_dict, dict)):
+            yaml_dict = {}
+        yaml_dict[model_type] = model_description_dict
+    else:
+        yaml_dict = {model_type:model_description_dict}
+    with open(yaml_path, 'w') as yml:
+        yaml.dump(yaml_dict, yml, default_flow_style=False)
+
+    return True
+
+
+def delete_files_in_directory(directory_path:str) -> bool:
+    try:
+        files = os.listdir(directory_path)
+        for file in files:
+            file_path = os.path.join(directory_path, file)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        return True
+        #print("All files deleted successfully.")
+    except OSError:
+        return False
+        #print("Error occurred while deleting files.")
+
+
+def check_dir_and_makedir(existed_dir:str, new_dir_name:str) -> str:
+    check_path = os.path.join(existed_dir, new_dir_name)
+    if not os.path.exists(check_path):
+        os.makedirs(check_path)
+    return check_path
+
+
+def get_fold_quantity_and_download(model_type:str, model_num:str) -> bool:
+    _, api_key = get_credential()
+    model_version_parameters = dict(
+        project = 'scomesse/football',
+        model = model_type,
+        api_token = api_key,
+        with_id = model_type + '-' + str(model_num)
+    )
+    model_version = neptune.init_model_version(**model_version_parameters)
+    model_version_structure = model_version.get_structure()
+    if 'description' in model_version_structure:
+        model_description_dict = {
+            key: model_version['description/' + key].fetch()
+            for key, value in model_version_structure['description'].items()
+        }
+        if 'kfold_splits' in model_version_structure['description']:
+            folds_quantity = model_version['description/kfold_splits'].fetch()
+        elif 'fold_quantity' in model_version_structure['description']:
+            folds_quantity = model_version['description/fold_quantity'].fetch()
+        elif 'model_0_description' in model_version_structure['models']:
+            folds_quantity = model_version['models/model_0_description/kfold_splits'].fetch()
+        model_description_dict['fold_quantity'] = folds_quantity
+    else:
+        print('Folds_quantity not found')
+        folds_quantity = 0
+    print('folds_quantity = ', folds_quantity)
+    main_models_dir = check_dir_and_makedir(INPUT_DIR, 'models')
+    model_description_dict['path'] = check_dir_and_makedir(main_models_dir, model_type)
+    _ = delete_files_in_directory(model_description_dict['path'])
+    model_description_dict['version'] = model_num
+
+    if 'models' in model_version_structure:
+        for model_name in model_version_structure['models'].keys():
+            final_name = model_name.split('.')[0].replace('model', 'booster')
+            model_version[f'models/{model_name}'].download(
+                os.path.join(model_description_dict['path'], f"{final_name}.model")
+            )
+    else:
+        print(f'no models in this version')
+    model_version.stop()
+    _ = add_model_info_to_yaml(model_type, model_description_dict)
+    return True
+
+
+def download_folded_models(**model_type_dict):
+    for model_type, options_dict in model_type_dict.items():
+        if options_dict['version'] is not None:
+            model_num = str(options_dict['version'])
+            get_fold_quantity_and_download(model_type, model_num)
