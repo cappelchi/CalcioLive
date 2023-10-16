@@ -8,7 +8,7 @@ from os.path import abspath
 from glob import glob
 from catboost import CatBoost
 from scipy.stats import poisson
-import warnings
+
 
 INPUT_DIR = abspath('./')
 model_dict = {}
@@ -33,10 +33,18 @@ data_types_dict = {
     'Over': np.float16, 'Under': np.float16, 'Hand1Value': np.float16, 'H1': np.float16, 'H2': np.float16
                     }
 
-cols = ['StatTime', 'Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2', 'DA1',
+backup_cols = ['StatTime', 'Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2', 'DA1',
         'DA2', 'Pos1', 'Pos2', 'Off1', 'Off2', 'On1', 'On2', 'YC1', 'YC2',
         'RC1', 'RC2', 'Sub1', 'Sub2', 'Pen1', 'Pen2', 'Cor1', 'Cor2', 'Period',
         'Comment']
+
+cols = ['Id', 'StatTime', 'Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2',
+       'DA1', 'DA2', 'Pos1', 'Pos2', 'Off1', 'Off2', 'On1', 'On2', 'YC1',
+       'YC2', 'RC1', 'RC2', 'Sub1', 'Sub2', 'Pen1', 'Pen2', 'Cor1', 'Cor2',
+       'Period', 'Comment', 'TimeSnapshot', 'D', 'I', 'Active.1', 'Time',
+       'Minute.1', 'RawTime', 'Score1.1', 'Score2.1', 'Period.1', 'Periods',
+       'Serve', 'W1', 'WX', 'W2', 'X1', 'X2', 'W12', 'TotalValue', 'Over',
+       'Under', 'Hand1Value', 'H1', 'H2']
 
 usecols = ['Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2', 'DA1',
            'DA2', 'Pos1', 'Pos2', 'Off1', 'Off2', 'On1', 'On2', 'YC1', 'YC2',
@@ -113,25 +121,14 @@ def load_model(model_type_order:str, model_name:str, num:str):
 
 
 def create_predict_vector(file_path:str):
-    try:
-        match_df = pd.read_csv(
-                            file_path,
-                            sep = ';',
-                            index_col = False,
-                            names = cols,
-                            skiprows = 1,
-                            usecols = usecols,
-                            dtype = data_types_dict
-                                )
-    except:
-        match_df = pd.read_csv(
-                            file_path,
-                            sep = ';',
-                            index_col = False,
-                            names = cols,
-                            skiprows = 1,
-                            usecols = usecols
-                                )
+    match_df = pd.read_csv(
+                        file_path,
+                        sep = ';',
+                        index_col = False,
+                        #names = cols,
+                        skiprows = 1,
+                        usecols = usecols
+                            )
     match_df.iloc[0, :] = match_df.iloc[0, :].fillna(0)
     match_df = match_df.ffill()
     P1, PX, P2 = pd.read_csv(
