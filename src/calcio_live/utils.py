@@ -120,7 +120,7 @@ def load_model(model_type_order:str, model_name:str, num:str):
     return PATH_TO_MODEL
 
 
-def create_predict_vector(file_path:str):
+def create_predict_vector(file_path:str, p1pxp2_align:bool):
     match_df = pd.read_csv(
                         file_path,
                         sep = ';',
@@ -138,7 +138,12 @@ def create_predict_vector(file_path:str):
                     header = None,
                     dtype={0: np.float32, 1: np.float32, 2: np.float32}
                             ).values[0]
-    match_df[['P1', 'P2']] = P1, P2
+    if p1pxp2_align:
+        psum = 1 / P1 + 1 / PX + 1 / P2
+    else:
+        psum = 1
+
+    match_df[['P1', 'P2']] = P1 * psum, P2 * psum
     match_df['min_norm'] = match_df['Minute'].astype(np.float32) / 50
     # трансформируем голы
     match_df[match_df['Score1'].isna()] = 0
@@ -455,9 +460,10 @@ def console_predict_v2(model_type_list:list):
     for file_path in glob(data_dir):
         file_num = os.path.basename(file_path).split('.')[0]
         output_dict[file_num] = {}
-        input_vector = create_predict_vector(file_path)
+        #input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
         for model_type in model_type_list:
             if model_type == 'FOOT-LIVEMC':
+                input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
                 (output_dict[file_num]['mc_home'],
                  output_dict[file_num]['mc_draw'],
                  output_dict[file_num]['mc_away']) = \
@@ -468,6 +474,7 @@ def console_predict_v2(model_type_list:list):
                                     ].values[-1,:]
                                             )
             elif model_type == 'FOOT-LIVETOTAL':
+                input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
                 preds_dict = predict_by_model_type(
                         preload_models_dict[model_type],
                         input_vector[
@@ -480,6 +487,7 @@ def console_predict_v2(model_type_list:list):
                         preds_dict['away']
                                             ))
             elif model_type == 'FOOT-LIVEHCAP':
+                input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
                 output_dict[file_num].update(
                     predict_by_model_type(
                         preload_models_dict[model_type],
