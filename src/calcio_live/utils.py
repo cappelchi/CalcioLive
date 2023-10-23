@@ -33,12 +33,12 @@ data_types_dict = {
     'Over': np.float16, 'Under': np.float16, 'Hand1Value': np.float16, 'H1': np.float16, 'H2': np.float16
                     }
 
-backup_cols = ['StatTime', 'Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2', 'DA1',
+cols = ['StatTime', 'Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2', 'DA1',
         'DA2', 'Pos1', 'Pos2', 'Off1', 'Off2', 'On1', 'On2', 'YC1', 'YC2',
         'RC1', 'RC2', 'Sub1', 'Sub2', 'Pen1', 'Pen2', 'Cor1', 'Cor2', 'Period',
         'Comment']
 
-cols = ['Id', 'StatTime', 'Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2',
+backup_cols = ['Id', 'StatTime', 'Minute', 'Active', 'Score1', 'Score2', 'A1', 'A2',
        'DA1', 'DA2', 'Pos1', 'Pos2', 'Off1', 'Off2', 'On1', 'On2', 'YC1',
        'YC2', 'RC1', 'RC2', 'Sub1', 'Sub2', 'Pen1', 'Pen2', 'Cor1', 'Cor2',
        'Period', 'Comment', 'TimeSnapshot', 'D', 'I', 'Active.1', 'Time',
@@ -125,7 +125,7 @@ def create_predict_vector(file_path:str, p1pxp2_align:bool):
                         file_path,
                         sep = ';',
                         index_col = False,
-                        #names = cols,
+                        names = cols,
                         skiprows = 1,
                         usecols = usecols
                             )
