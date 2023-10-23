@@ -460,10 +460,13 @@ def console_predict_v2(model_type_list:list):
     for file_path in glob(data_dir):
         file_num = os.path.basename(file_path).split('.')[0]
         output_dict[file_num] = {}
-        #input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
         for model_type in model_type_list:
+            if 'p1pxp2_align' in model_dict[model_type]:
+                p1pxp2_align = model_dict[model_type]['p1pxp2_align']
+            else:
+                p1pxp2_align = False
             if model_type == 'FOOT-LIVEMC':
-                input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
+                input_vector = create_predict_vector(file_path, p1pxp2_align)
                 (output_dict[file_num]['mc_home'],
                  output_dict[file_num]['mc_draw'],
                  output_dict[file_num]['mc_away']) = \
@@ -474,7 +477,7 @@ def console_predict_v2(model_type_list:list):
                                     ].values[-1,:]
                                             )
             elif model_type == 'FOOT-LIVETOTAL':
-                input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
+                input_vector = create_predict_vector(file_path, p1pxp2_align)
                 preds_dict = predict_by_model_type(
                         preload_models_dict[model_type],
                         input_vector[
@@ -487,13 +490,17 @@ def console_predict_v2(model_type_list:list):
                         preds_dict['away']
                                             ))
             elif model_type == 'FOOT-LIVEHCAP':
-                input_vector = create_predict_vector(file_path, model_dict[model_type]['p1pxp2_align'])
-                output_dict[file_num].update(
-                    predict_by_model_type(
+                input_vector = create_predict_vector(file_path, p1pxp2_align)
+                preds_dict = predict_by_model_type(
                         preload_models_dict[model_type],
                         input_vector[
-                            yaml.load(model_dict[model_type]['selected_columns'], Loader=yaml.SafeLoader)
+                            yaml.load(model_dict[model_type]['selected_columns'], Loader = yaml.SafeLoader)
                         ].values[-1, :]
+                                            )
+                output_dict[file_num].update(
+                handicap_probability(
+                        preds_dict['home'],
+                        preds_dict['away']
                                             ))
     pd.DataFrame.from_dict(
         output_dict, orient='index'
