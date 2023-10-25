@@ -291,7 +291,10 @@ def create_predict_vector(file_path: str, p1pxp2_align: bool):
         dtype={0: np.float32, 1: np.float32, 2: np.float32},
     ).values[0]
     if p1pxp2_align:
-        psum = 1 / P1 + 1 / PX + 1 / P2
+        if (P1 > 0) & (PX > 0) & (P2 > 0):
+            psum = 1 / P1 + 1 / PX + 1 / P2
+        else:
+            psum = 1
     else:
         psum = 1
 
@@ -616,11 +619,11 @@ def console_predict():
 def predict_by_model_type(preload_models_dict: dict, input_vector: np.array):
     if "home" in preload_models_dict:
         preds_dict = {}
-        for team, preload_models_dict in preload_models_dict.items():
+        for team, preload_models_dict_team in preload_models_dict.items():
             preds_dict[team] = sum(
-                preloaded_model.predict(input_vector)
-                for _, preloaded_model in preload_models_dict.items()
-            ) / len(preload_models_dict)
+                preloaded_model.predict(input_vector) * 21
+                for _, preloaded_model in preload_models_dict_team.items()
+            ) / len(preload_models_dict_team)
         return preds_dict
     else:
         preds = sum(
