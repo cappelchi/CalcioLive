@@ -349,11 +349,11 @@ def create_predict_vector(file_path: str, p1pxp2_align: bool):
     # трансформируем опасные атаки
     match_df["DA1_scaled"] = match_df["DA1"].astype(np.float32) / 50
     match_df.loc[match_df["DA1"] >= 40, ["DA1_scaled"]] = (
-        80 + (match_df["DA1"] - 40) / 3
+        80 + (match_df["DA1"].astype(np.float32) - 40) / 3
     ) / 100
     match_df["DA2_scaled"] = match_df["DA2"].astype(np.float32) / 50
     match_df.loc[match_df["DA2"] >= 40, ["DA2_scaled"]] = (
-        80 + (match_df["DA2"] - 40) / 3
+        80 + (match_df["DA2"].astype(np.float32) - 40) / 3
     ) / 100
     # опасные атаки в минуту
     match_df["DA1perMIN"] = match_df["DA1"].astype(np.float32) / match_df[
