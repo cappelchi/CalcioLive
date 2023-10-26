@@ -297,7 +297,6 @@ def create_predict_vector(file_path: str, p1pxp2_align: bool):
             psum = 1
     else:
         psum = 1
-
     match_df[["P1", "P2"]] = P1 * psum, P2 * psum
     match_df["min_norm"] = match_df["Minute"].astype(np.float32) / 50
     # трансформируем голы
