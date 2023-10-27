@@ -277,19 +277,15 @@ def load_model(model_type_order: str, model_name: str, num: str):
     return PATH_TO_MODEL
 
 
-def create_predict_vector(file_path: str, p1pxp2_align: bool):
-    match_df = pd.read_csv(
-        file_path, sep=";", index_col=False, names=cols, skiprows=1, usecols=usecols
-    )
+def create_predict_vector(p1pxp2_align: bool, current_matches_df_dict):
+    match_df = current_matches_df_dict["df"]
     match_df.iloc[0, :] = match_df.iloc[0, :].fillna(0)
     match_df = match_df.ffill()
-    P1, PX, P2 = pd.read_csv(
-        file_path,
-        sep=";",
-        nrows=1,
-        header=None,
-        dtype={0: np.float32, 1: np.float32, 2: np.float32},
-    ).values[0]
+    P1, PX, P2 = (
+        current_matches_df_dict["P1"],
+        current_matches_df_dict["PX"],
+        current_matches_df_dict["P2"],
+    )
     if p1pxp2_align:
         if (P1 > 0) & (PX > 0) & (P2 > 0):
             psum = 1 / P1 + 1 / PX + 1 / P2
@@ -669,6 +665,22 @@ def load_model_to_dict(model_type: str, model_dict: dict) -> dict:
         }
 
 
+def preload_dataframe(file_path: str):
+    match_df = pd.read_csv(
+        file_path, sep=";", index_col=False, names=cols, skiprows=1, usecols=usecols
+    )
+    match_df.iloc[0, :] = match_df.iloc[0, :].fillna(0)
+    match_df = match_df.ffill()
+    P1, PX, P2 = pd.read_csv(
+        file_path,
+        sep=";",
+        nrows=1,
+        header=None,
+        dtype={0: np.float32, 1: np.float32, 2: np.float32},
+    ).values[0]
+    return match_df, P1, PX, P2
+
+
 def console_predict_v2(model_type_list: list):
     model_dict = load_model_info_from_yaml()
     preload_models_dict = {}
@@ -681,8 +693,17 @@ def console_predict_v2(model_type_list: list):
     data_dir = os.path.join(
         os.path.split(os.path.split(INPUT_DIR)[0])[0], "data", "*.csv"
     )
+
+    current_matches_df_dict = {}
     for file_path in glob(data_dir):
         file_num = os.path.basename(file_path).split(".")[0]
+        match_df, P1, PX, P2 = preload_dataframe(file_path)
+        current_matches_df_dict[file_num] = {
+            "df": match_df,
+            "P1": P1,
+            "PX": PX,
+            "P2": P2,
+        }
         output_dict[file_num] = {}
         for model_type in model_type_list:
             if "p1pxp2_align" in model_dict[model_type]:
@@ -690,7 +711,9 @@ def console_predict_v2(model_type_list: list):
             else:
                 p1pxp2_align = False
             if model_type == "FOOT-LIVEMC":
-                input_vector = create_predict_vector(file_path, p1pxp2_align)
+                input_vector = create_predict_vector(
+                    p1pxp2_align, current_matches_df_dict[file_num]
+                )
                 (
                     output_dict[file_num]["mc_home"],
                     output_dict[file_num]["mc_draw"],
@@ -705,7 +728,9 @@ def console_predict_v2(model_type_list: list):
                     ].values[-1, :],
                 )
             elif model_type == "FOOT-LIVETOTAL":
-                input_vector = create_predict_vector(file_path, p1pxp2_align)
+                input_vector = create_predict_vector(
+                    p1pxp2_align, current_matches_df_dict[file_num]
+                )
                 preds_dict = predict_by_model_type(
                     preload_models_dict[model_type],
                     input_vector[
@@ -719,7 +744,9 @@ def console_predict_v2(model_type_list: list):
                     total_probability(preds_dict["home"], preds_dict["away"])
                 )
             elif model_type == "FOOT-LIVEHCAP":
-                input_vector = create_predict_vector(file_path, p1pxp2_align)
+                input_vector = create_predict_vector(
+                    p1pxp2_align, current_matches_df_dict[file_num]
+                )
                 preds_dict = predict_by_model_type(
                     preload_models_dict[model_type],
                     input_vector[
